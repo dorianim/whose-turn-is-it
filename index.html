@@ -16,29 +16,42 @@
         <div x-data>
             <div x-show="$store.localState.joined">
                 <hgroup>
-                    <h1 x-text="'Currently playing: ' + ($store.remoteState.isMyTurn ? 'YOU!':$store.remoteState.players[$store.remoteState.currentPlayer])">
+                    <h1
+                        x-text="'Currently playing: ' + ($store.remoteState.isMyTurn ? 'YOU!':$store.remoteState.players[$store.remoteState.currentPlayer])">
                     </h1>
                     <h2 x-text="'You are ' + $store.localState.name"></h2>
                 </hgroup>
 
                 <div x-data="Timer">
-                    <p :class="'timer' + ($store.remoteState.isMyTurn ? ' my-turn':'') + (time < 0 ? ' over':'')" x-text="time + 's'"></p>
+                    <p :class="'timer' + ($store.remoteState.isMyTurn ? ' my-turn':'') + (time < 0 ? ' over':'')"
+                        x-text="time + 's'"></p>
                 </div>
 
                 <button @click="$store.remoteState.giveTurnToNextPlayer()"
                     x-bind:disabled="$store.remoteState.currentPlayer !== $store.localState.id">I'm done!</button>
-                <p>Player after me: <b x-text="$store.remoteState.players[$store.localState.nextPlayer]"></b> </p>
-                <select x-model="$store.localState.nextPlayer">
+
+                <label for="nextPlayer_select">Player after me: <b
+                        x-text="$store.remoteState.players[$store.localState.nextPlayer]"></b> </label>
+                <select x-model="$store.localState.nextPlayer" id="nextPlayer_select">
                     <template
                         x-for="playerId in Object.keys($store.remoteState.players).filter(id => id != $store.localState.id)"
                         :key="playerId">
                         <option x-bind:value="playerId" x-text="$store.remoteState.players[playerId]"></option>
                     </template>
                 </select>
+
+                <fieldset>
+                    <label for="sound_enabled">
+                        <input x-model="$store.audio.isEnabled" @click="$store.audio.testPermission()" type="checkbox" id="sound_enabled" name="sound_enabled" role="switch">
+                        Enable sound
+                    </label>
+                </fieldset>
+
                 <div class="grid">
                     <button class="secondary outline" @click="$store.localState.leave()">Leave</button>
                     <button class="secondary outline" @click="$store.remoteState.clear()">Clear</button>
                 </div>
+
                 <p>Other players:</p>
                 <ul>
                     <template x-for="playerId in Object.keys($store.remoteState.players)" :key="playerId">

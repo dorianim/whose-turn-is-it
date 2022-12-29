@@ -81,7 +81,6 @@ document.addEventListener('alpine:init', () => {
         connected: false,
         isMyTurn: false,
         _client: null,
-        _audio: null,
 
         init() {
             Alpine.effect(() => {
@@ -113,11 +112,9 @@ document.addEventListener('alpine:init', () => {
 
             Alpine.effect(() => {
                 if(this.isMyTurn) {
-                    this._audio.play();
+                    Alpine.store("audio").playDing()
                 }
             })
-
-            this._audio = new Audio('ding.mp3');
         },
 
         connect() {
@@ -172,5 +169,52 @@ document.addEventListener('alpine:init', () => {
             }), { qos:1, retain: true })
             this._client.publish('im.dorian.whos-turn-is-it.currentPlayer', Alpine.store("localState").id, { qos:1, retain: true })
         }
+    })
+
+    Alpine.store("audio", {
+        hasBeenTested: false,
+        isAvailable: false,
+        isEnabled: false,
+        audioPlayer: null,
+
+        init() {
+            this.audioPlayer = new Audio('silence.mp3');
+
+            Alpine.effect(() => {
+                localStorage.setItem("audio_enabled", this.isEnabled)
+            })
+        },
+
+        testPermission() {
+            if(this.isEnabled) return;
+            this.audioPlayer.src = 'silence.mp3';
+            this.audioPlayer.play().then(() => {
+                this.isAvailable = true
+                this.isEnabled = localStorage.getItem("audio_enabled") === false ? false:true
+                this.hasBeenTested = true
+            }).catch((error) => {
+                console.warn("Audio permission not granted!")
+                this.isAvailable = false
+                this.isEnabled = false
+                this.hasBeenTested = true
+            })
+        },
+
+        playDing() {
+            if(!this.isEnabled) return;
+            this.playSound('ding.mp3')
+        },
+
+        playSound(soundFile) {
+            if (!this.audioPlayer.paused || !this.isAvailable) {
+                return;
+            }
+            if (!this.audioPlayer.src.endsWith(soundFile)) {
+                this.audioPlayer.src = soundFile;
+            }
+            this.audioPlayer.play();
+        },
+
+
     })
 })
