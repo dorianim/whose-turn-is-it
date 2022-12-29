@@ -24,7 +24,7 @@ function Timer() {
           }, 1000);
         },
     }
-} 
+}
 
 document.addEventListener('alpine:init', () => {
     console.log("Alpine.js is ready to go!")
@@ -102,7 +102,7 @@ document.addEventListener('alpine:init', () => {
             })
 
             Alpine.effect(() => {
-                if(Alpine.store("localState").nextPlayer == null || !Object.keys(this.players).includes(Alpine.store("localState").nextPlayer)) {
+                if(Alpine.store("localState").nextPlayer == null || Alpine.store("localState").nextPlayer == Alpine.store("localState").id || !Object.keys(this.players).includes(Alpine.store("localState").nextPlayer)) {
                     const players = Object.keys(this.players).sort();
                     const nextPlayer = players[(players.indexOf(Alpine.store("localState").id) + 1) % players.length]
                     Alpine.store("localState").nextPlayer = nextPlayer;
@@ -160,6 +160,7 @@ document.addEventListener('alpine:init', () => {
             this._client.publish('im.dorian.whos-turn-is-it.players', JSON.stringify({
                 [Alpine.store("localState").id]: Alpine.store("localState").name,
             }), { qos:1, retain: true })
+            this._client.publish('im.dorian.whos-turn-is-it.currentPlayer', Alpine.store("localState").id, { qos:1, retain: true })
         }
     })
 })

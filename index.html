@@ -27,7 +27,7 @@
 
                 <button @click="$store.remoteState.giveTurnToNextPlayer()"
                     x-bind:disabled="$store.remoteState.currentPlayer !== $store.localState.id">I'm done!</button>
-                <p>Player after me:</p>
+                <p>Player after me: <b x-text="$store.remoteState.players[$store.localState.nextPlayer]"></b> </p>
                 <select x-model="$store.localState.nextPlayer">
                     <template
                         x-for="playerId in Object.keys($store.remoteState.players).filter(id => id != $store.localState.id)"
