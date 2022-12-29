@@ -111,7 +111,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         connect() {
-            const url = 'ws://broker.emqx.io:8083/mqtt'
+            const url = 'wss://broker.emqx.io:8084/mqtt'
 
             const options = {
                 // Clean session
