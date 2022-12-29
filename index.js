@@ -20,8 +20,15 @@ function Timer() {
         time: 0,
         init() {
             setInterval(() => {
-                this.time = parseInt((90000 - ((new Date()).getTime() - Alpine.store("remoteState").lastPlayerSwitch)) / 1000);
-            }, 1000);
+                const lastPlayerSwitch = Alpine.store("remoteState").lastPlayerSwitch
+                console.log(lastPlayerSwitch)
+                if(!lastPlayerSwitch) {
+                    this.time = null
+                }
+                else {
+                    this.time = parseInt((90000 - ((new Date()).getTime() - lastPlayerSwitch)) / 1000);
+                }
+            }, 100);
         },
     }
 }
@@ -77,7 +84,7 @@ document.addEventListener('alpine:init', () => {
     Alpine.store("remoteState", {
         players: [],
         currentPlayer: null,
-        lastPlayerSwitch: 0,
+        lastPlayerSwitch: null,
         connected: false,
         isMyTurn: false,
         _client: null,
@@ -93,7 +100,6 @@ document.addEventListener('alpine:init', () => {
             })
 
             Alpine.effect(() => {
-                this.lastPlayerSwitch = new Date().getTime();
                 if (this.currentPlayer == Alpine.store("localState").id) {
                     this.isMyTurn = true;
                 }
@@ -149,13 +155,18 @@ document.addEventListener('alpine:init', () => {
                     Alpine.store("remoteState").players = data;
                 }
                 else if (topic === "im.dorian.whos-turn-is-it.currentPlayer") {
-                    Alpine.store("remoteState").currentPlayer = message.toString();
+                    const data = JSON.parse(message.toString());
+                    Alpine.store("remoteState").currentPlayer = data.id;
+                    Alpine.store("remoteState").lastPlayerSwitch = data.since;
                 }
             })
         },
 
         giveTurnToNextPlayer() {
-            this._client.publish('im.dorian.whos-turn-is-it.currentPlayer', Alpine.store("localState").nextPlayer, { qos: 1, retain: true })
+            this._client.publish('im.dorian.whos-turn-is-it.currentPlayer', JSON.stringify({
+                id: Alpine.store("localState").nextPlayer,
+                since: new Date().getTime()
+            }), { qos: 1, retain: true })
         },
 
 
@@ -167,7 +178,10 @@ document.addEventListener('alpine:init', () => {
             this._client.publish('im.dorian.whos-turn-is-it.players', JSON.stringify({
                 [Alpine.store("localState").id]: Alpine.store("localState").name,
             }), { qos: 1, retain: true })
-            this._client.publish('im.dorian.whos-turn-is-it.currentPlayer', Alpine.store("localState").id, { qos: 1, retain: true })
+            this._client.publish('im.dorian.whos-turn-is-it.currentPlayer', JSON.stringify({
+                id: Alpine.store("localState").id,
+                since: new Date().getTime()
+            }), { qos: 1, retain: true })
         }
     })
 

@@ -23,8 +23,13 @@
                 </hgroup>
 
                 <div x-data="Timer">
+                    <div x-show="!time">
+                        <div class="timer loading" href="#" aria-busy="true">please wait</div>
+                    </div>
+                    <div x-show="time">
                     <p :class="'timer' + ($store.remoteState.isMyTurn ? ' my-turn':'') + (time < 0 ? ' over':'')"
                         x-text="time + 's'"></p>
+                    </div>
                 </div>
 
                 <button @click="$store.remoteState.giveTurnToNextPlayer()"
