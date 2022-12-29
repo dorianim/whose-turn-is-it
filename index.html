@@ -16,13 +16,13 @@
         <div x-data>
             <div x-show="$store.localState.joined">
                 <hgroup>
-                    <h1 x-text="'Currently playing: ' + $store.remoteState.players[$store.remoteState.currentPlayer]">
+                    <h1 x-text="'Currently playing: ' + ($store.remoteState.isMyTurn ? 'YOU!':$store.remoteState.players[$store.remoteState.currentPlayer])">
                     </h1>
-                    <h2 x-text="'I am ' + $store.localState.name"></h2>
+                    <h2 x-text="'You are ' + $store.localState.name"></h2>
                 </hgroup>
 
                 <div x-data="Timer">
-                    <p :class="time < 0 ? 'timer over':'timer'" x-text="time + 's'"></p>
+                    <p :class="'timer' + ($store.remoteState.isMyTurn ? ' my-turn':'') + (time < 0 ? ' over':'')" x-text="time + 's'"></p>
                 </div>
 
                 <button @click="$store.remoteState.giveTurnToNextPlayer()"

@@ -20,7 +20,7 @@ function Timer() {
         time: 0,
         init() {
           setInterval(() => {
-            this.time = parseInt((30000 - ((new Date()).getTime() - Alpine.store("remoteState").lastPlayerSwitch)) / 1000);
+            this.time = parseInt((90000 - ((new Date()).getTime() - Alpine.store("remoteState").lastPlayerSwitch)) / 1000);
           }, 1000);
         },
     }
@@ -43,9 +43,6 @@ document.addEventListener('alpine:init', () => {
                 }
             })
 
-            Alpine.effect(() => {
-                console.log(this.nextPlayer)
-            })
             this.restore();
         },
 
@@ -82,6 +79,7 @@ document.addEventListener('alpine:init', () => {
         currentPlayer: null,
         lastPlayerSwitch: 0,
         connected: false,
+        isMyTurn: false,
         _client: null,
 
         init() {
@@ -97,7 +95,10 @@ document.addEventListener('alpine:init', () => {
             Alpine.effect(() => {
                 this.lastPlayerSwitch = new Date().getTime();
                 if(this.currentPlayer == Alpine.store("localState").id) {
-                    alert("It's your turn!")
+                    this.isMyTurn = true;
+                }
+                else {
+                    this.isMyTurn = false;
                 }
             })
 

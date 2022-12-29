@@ -5,6 +5,18 @@
     line-height: 1.2;
 }
 
+
+@keyframes blinker {
+    50% {
+      opacity: 0;
+    }
+  }
+
+.timer.my-turn {
+    color: #0f0;
+    animation: blinker 1s linear infinite;
+}
+
 .timer.over {
     color: #f00;
 }
