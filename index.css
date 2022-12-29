@@ -1,0 +1,10 @@
+.timer {
+    font-size: 10em;
+    font-weight: bold;
+    text-align: center;
+    line-height: 1.2;
+}
+
+.timer.over {
+    color: #f00;
+}

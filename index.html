@@ -1,0 +1,57 @@
+<html>
+
+<head>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <script src="index.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css">
+    <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+    <main class="container">
+        <div x-data>
+            <div x-show="$store.localState.joined">
+                <hgroup>
+                    <h1 x-text="'Currently playing: ' + $store.remoteState.players[$store.remoteState.currentPlayer]">
+                    </h1>
+                    <h2 x-text="'I am ' + $store.localState.name"></h2>
+                </hgroup>
+
+                <div x-data="Timer">
+                    <p :class="time < 0 ? 'timer over':'timer'" x-text="time + 's'"></p>
+                </div>
+
+                <button @click="$store.remoteState.giveTurnToNextPlayer()"
+                    x-bind:disabled="$store.remoteState.currentPlayer !== $store.localState.id">I'm done!</button>
+                <p>Player after me:</p>
+                <select x-model="$store.localState.nextPlayer">
+                    <template
+                        x-for="playerId in Object.keys($store.remoteState.players).filter(id => id != $store.localState.id)"
+                        :key="playerId">
+                        <option x-bind:value="playerId" x-text="$store.remoteState.players[playerId]"></option>
+                    </template>
+                </select>
+                <div class="grid">
+                    <button class="secondary outline" @click="$store.localState.leave()">Leave</button>
+                    <button class="secondary outline" @click="$store.remoteState.clear()">Clear</button>
+                </div>
+                <p>Other players:</p>
+                <ul>
+                    <template x-for="playerId in Object.keys($store.remoteState.players)" :key="playerId">
+                        <li x-text="$store.remoteState.players[playerId]"></li>
+                    </template>
+                </ul>
+
+            </div>
+            <div x-show="!$store.localState.joined">
+                <form x-data="JoinForm()" @submit.prevent="submitForm">
+                    <input type="text" x-model="formData.name" placeholder="Name">
+                    <button type="submit">Join</button>
+                </form>
+            </div>
+        </div>
+    </main>
+</body>
+
+</html>
