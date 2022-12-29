@@ -19,9 +19,9 @@ function Timer() {
     return {
         time: 0,
         init() {
-          setInterval(() => {
-            this.time = parseInt((90000 - ((new Date()).getTime() - Alpine.store("remoteState").lastPlayerSwitch)) / 1000);
-          }, 1000);
+            setInterval(() => {
+                this.time = parseInt((90000 - ((new Date()).getTime() - Alpine.store("remoteState").lastPlayerSwitch)) / 1000);
+            }, 1000);
         },
     }
 }
@@ -59,8 +59,8 @@ document.addEventListener('alpine:init', () => {
         leave() {
             this.joined = false;
             this.name = "";
-            this.id = "";
             localStorage.clear();
+            localStorage.setItem("id", this.id)
             Alpine.store("remoteState").disconnect();
         },
 
@@ -88,13 +88,13 @@ document.addEventListener('alpine:init', () => {
                     this._client.publish('im.dorian.whos-turn-is-it.players', JSON.stringify({
                         [Alpine.store("localState").id]: Alpine.store("localState").name,
                         ...this.players
-                    }), { qos:1, retain: true })
+                    }), { qos: 1, retain: true })
                 }
             })
 
             Alpine.effect(() => {
                 this.lastPlayerSwitch = new Date().getTime();
-                if(this.currentPlayer == Alpine.store("localState").id) {
+                if (this.currentPlayer == Alpine.store("localState").id) {
                     this.isMyTurn = true;
                 }
                 else {
@@ -103,7 +103,7 @@ document.addEventListener('alpine:init', () => {
             })
 
             Alpine.effect(() => {
-                if(Alpine.store("localState").nextPlayer == null || Alpine.store("localState").nextPlayer == Alpine.store("localState").id || !Object.keys(this.players).includes(Alpine.store("localState").nextPlayer)) {
+                if (Alpine.store("localState").nextPlayer == null || Alpine.store("localState").nextPlayer == Alpine.store("localState").id || !Object.keys(this.players).includes(Alpine.store("localState").nextPlayer)) {
                     const players = Object.keys(this.players).sort();
                     const nextPlayer = players[(players.indexOf(Alpine.store("localState").id) + 1) % players.length]
                     Alpine.store("localState").nextPlayer = nextPlayer;
@@ -111,7 +111,7 @@ document.addEventListener('alpine:init', () => {
             })
 
             Alpine.effect(() => {
-                if(this.isMyTurn) {
+                if (this.isMyTurn) {
                     Alpine.store("audio").playDing()
                 }
             })
@@ -143,19 +143,19 @@ document.addEventListener('alpine:init', () => {
 
                 if (topic === "im.dorian.whos-turn-is-it.players") {
                     const data = JSON.parse(message.toString());
-                    if(!Alpine.store("remoteState").connected) {
+                    if (!Alpine.store("remoteState").connected) {
                         Alpine.store("remoteState").connected = true;
                     }
                     Alpine.store("remoteState").players = data;
                 }
-                else if(topic === "im.dorian.whos-turn-is-it.currentPlayer") {
+                else if (topic === "im.dorian.whos-turn-is-it.currentPlayer") {
                     Alpine.store("remoteState").currentPlayer = message.toString();
                 }
             })
         },
 
         giveTurnToNextPlayer() {
-            this._client.publish('im.dorian.whos-turn-is-it.currentPlayer', Alpine.store("localState").nextPlayer, { qos:1, retain: true })
+            this._client.publish('im.dorian.whos-turn-is-it.currentPlayer', Alpine.store("localState").nextPlayer, { qos: 1, retain: true })
         },
 
 
@@ -166,8 +166,8 @@ document.addEventListener('alpine:init', () => {
         clear() {
             this._client.publish('im.dorian.whos-turn-is-it.players', JSON.stringify({
                 [Alpine.store("localState").id]: Alpine.store("localState").name,
-            }), { qos:1, retain: true })
-            this._client.publish('im.dorian.whos-turn-is-it.currentPlayer', Alpine.store("localState").id, { qos:1, retain: true })
+            }), { qos: 1, retain: true })
+            this._client.publish('im.dorian.whos-turn-is-it.currentPlayer', Alpine.store("localState").id, { qos: 1, retain: true })
         }
     })
 
@@ -186,11 +186,11 @@ document.addEventListener('alpine:init', () => {
         },
 
         testPermission() {
-            if(this.isEnabled) return;
+            if (this.isEnabled) return;
             this.audioPlayer.src = 'silence.mp3';
             this.audioPlayer.play().then(() => {
                 this.isAvailable = true
-                this.isEnabled = localStorage.getItem("audio_enabled") === false ? false:true
+                this.isEnabled = localStorage.getItem("audio_enabled") === false ? false : true
                 this.hasBeenTested = true
             }).catch((error) => {
                 console.warn("Audio permission not granted!")
@@ -201,7 +201,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         playDing() {
-            if(!this.isEnabled) return;
+            if (!this.isEnabled) return;
             this.playSound('ding.mp3')
         },
 
