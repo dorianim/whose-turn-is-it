@@ -81,6 +81,7 @@ document.addEventListener('alpine:init', () => {
         connected: false,
         isMyTurn: false,
         _client: null,
+        _audio: null,
 
         init() {
             Alpine.effect(() => {
@@ -109,6 +110,14 @@ document.addEventListener('alpine:init', () => {
                     Alpine.store("localState").nextPlayer = nextPlayer;
                 }
             })
+
+            Alpine.effect(() => {
+                if(this.isMyTurn) {
+                    this._audio.play();
+                }
+            })
+
+            this._audio = new Audio('ding.mp3');
         },
 
         connect() {
