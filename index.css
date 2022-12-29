@@ -8,15 +8,16 @@
 
 @keyframes blinker {
     50% {
-      opacity: 0;
+      opacity: 0.3;
     }
   }
 
 .timer.my-turn {
     color: #0f0;
-    animation: blinker 1s linear infinite;
+    animation: blinker 2s ease infinite;
 }
 
 .timer.over {
     color: #f00;
+    animation: blinker 0.5s ease infinite;
 }
