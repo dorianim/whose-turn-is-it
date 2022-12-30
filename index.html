@@ -1,14 +1,14 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
 
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <script src="index.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css">
-    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css" />
+    <link rel="stylesheet" href="index.css" />
 </head>
 
 <body>
@@ -24,19 +24,24 @@
 
                 <div x-data="Timer">
                     <div x-show="!time">
-                        <div class="timer loading" href="#" aria-busy="true">please wait</div>
+                        <div class="timer loading" href="#" aria-busy="true">
+                            please wait
+                        </div>
                     </div>
                     <div x-show="time">
-                    <p :class="'timer' + ($store.remoteState.isMyTurn ? ' my-turn':'') + (time < 0 ? ' over':'')"
-                        x-text="time + 's'"></p>
+                        <p :class="'timer' + ($store.remoteState.isMyTurn ? ' my-turn':'') + (time < 0 ? ' over':'')"
+                            x-text="time + 's'"></p>
                     </div>
                 </div>
 
                 <button @click="$store.remoteState.giveTurnToNextPlayer()"
-                    x-bind:disabled="$store.remoteState.currentPlayer !== $store.localState.id">I'm done!</button>
+                    x-bind:disabled="$store.remoteState.currentPlayer !== $store.localState.id">
+                    I'm done!
+                </button>
 
-                <label for="nextPlayer_select">Player after me: <b
-                        x-text="$store.remoteState.players[$store.localState.nextPlayer]"></b> </label>
+                <label for="nextPlayer_select">Player after me:
+                    <b x-text="$store.remoteState.players[$store.localState.nextPlayer]"></b>
+                </label>
                 <select x-model="$store.localState.nextPlayer" id="nextPlayer_select">
                     <template
                         x-for="playerId in Object.keys($store.remoteState.players).filter(id => id != $store.localState.id)"
@@ -47,14 +52,19 @@
 
                 <fieldset>
                     <label for="sound_enabled">
-                        <input x-model="$store.audio.isEnabled" @click="$store.audio.testPermission()" type="checkbox" id="sound_enabled" name="sound_enabled" role="switch">
+                        <input x-model="$store.audio.isEnabled" @click="$store.audio.testPermission()" type="checkbox"
+                            id="sound_enabled" name="sound_enabled" role="switch" />
                         Enable sound
                     </label>
                 </fieldset>
 
                 <div class="grid">
-                    <button class="secondary outline" @click="$store.localState.leave()">Leave</button>
-                    <button class="secondary outline" @click="$store.remoteState.clear()">Clear</button>
+                    <button class="secondary outline" @click="$store.localState.leave()">
+                        Leave
+                    </button>
+                    <button class="secondary outline" @click="$store.remoteState.clear()">
+                        Clear
+                    </button>
                 </div>
 
                 <p>Other players:</p>
@@ -63,11 +73,10 @@
                         <li x-text="$store.remoteState.players[playerId]"></li>
                     </template>
                 </ul>
-
             </div>
             <div x-show="!$store.localState.joined">
                 <form x-data="JoinForm()" @submit.prevent="submitForm">
-                    <input type="text" x-model="formData.name" placeholder="Name">
+                    <input type="text" x-model="formData.name" placeholder="Name" />
                     <button type="submit">Join</button>
                 </form>
             </div>

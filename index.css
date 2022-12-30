@@ -1,30 +1,29 @@
 .timer {
-    font-size: 10em;
-    font-weight: bold;
-    text-align: center;
-    line-height: 1.2;
+  font-size: 10em;
+  font-weight: bold;
+  text-align: center;
+  line-height: 1.2;
 }
 
-
 @keyframes blinker {
-    50% {
-      opacity: 0.3;
-    }
+  50% {
+    opacity: 0.3;
   }
+}
 
 .timer.my-turn {
-    color: #0f0;
-    animation: blinker 2s ease infinite;
+  color: #0f0;
+  animation: blinker 2s ease infinite;
 }
 
 .timer.over {
-    color: #f00;
-    animation: blinker 0.5s ease infinite;
+  color: #f00;
+  animation: blinker 0.5s ease infinite;
 }
 
 .timer.loading {
-    font-size: 2em;
-    margin: auto;
-    margin-bottom: 2.5em;
-    margin-top: 2.5em;
+  font-size: 2em;
+  margin: auto;
+  margin-bottom: 2.5em;
+  margin-top: 2.5em;
 }
