@@ -189,14 +189,14 @@ document.addEventListener("alpine:init", () => {
 
         if (topic === that._playersTopic) {
           const data = JSON.parse(message.toString());
-          if (!Alpine.store("remoteState").connected) {
-            Alpine.store("remoteState").connected = true;
+          if (!that.connected) {
+            that.connected = true;
           }
-          Alpine.store("remoteState").players = data;
+          that.players = data;
         } else if (topic === that._currentPlayerTopic) {
           const data = JSON.parse(message.toString());
-          Alpine.store("remoteState").currentPlayer = data.id;
-          Alpine.store("remoteState").lastPlayerSwitch = data.since;
+          that.currentPlayer = data.id;
+          that.lastPlayerSwitch = data.since;
         }
       });
     },
