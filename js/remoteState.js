@@ -30,13 +30,12 @@ document.addEventListener("alpine:init", () => {
       });
 
       Alpine.effect(() => {
-        const myTurn = this.currentPlayer == Alpine.store("localState").id
+        const myTurn = this.currentPlayer == Alpine.store("localState").id;
         if (myTurn && !this.skipMe) {
           this.isMyTurn = true;
           Alpine.store("audio").playDing();
-        } 
-        else if(myTurn && this.skipMe) {
-          this.giveTurnToNextPlayer()
+        } else if (myTurn && this.skipMe) {
+          this.giveTurnToNextPlayer();
         } else {
           this.isMyTurn = false;
         }

@@ -34,17 +34,29 @@
 
 .first-details {
   padding-top: var(--spacing);
-    border-bottom: var(--border-width) solid var(--accordion-border-color);
-    border-top: var(--border-width) solid var(--accordion-border-color);
+  border-bottom: var(--border-width) solid var(--accordion-border-color);
+  border-top: var(--border-width) solid var(--accordion-border-color);
 }
 
-:is(button, input[type="submit"], input[type="button"], [role="button"]).outline.invalid, input[type="reset"].outline {
+:is(
+    button,
+    input[type="submit"],
+    input[type="button"],
+    [role="button"]
+  ).outline.invalid,
+input[type="reset"].outline {
   --color: var(--form-element-invalid-border-color);
   --background-color: transparent;
 }
 
-:is(button, input[type="submit"], input[type="button"], [role="button"]).invalid, input[type="reset"] {
-	--background-color: var(--form-element-invalid-border-color);
+:is(
+    button,
+    input[type="submit"],
+    input[type="button"],
+    [role="button"]
+  ).invalid,
+input[type="reset"] {
+  --background-color: var(--form-element-invalid-border-color);
   --border-color: var(--form-element-invalid-border-color);
-	cursor: pointer;
+  cursor: pointer;
 }
