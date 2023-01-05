@@ -1,12 +1,17 @@
 function JoinForm() {
   return {
     formData: {
-      name: "",
+        name: "",
+        room: "",
+    },
+    init() {
+        this.formData.name = Alpine.store("localState").name;
+        this.formData.room = Alpine.store("localState").room;
     },
     submitForm() {
-      Alpine.store("localState").join(this.formData.name);
-    },
-  };
+        Alpine.store("localState").join(this.formData.name, this.formData.room);
+    }
+}
 }
 
 function uuidv4() {
@@ -24,7 +29,7 @@ function Timer() {
     init() {
       setInterval(() => {
         const lastPlayerSwitch = Alpine.store("remoteState").lastPlayerSwitch;
-        console.log(lastPlayerSwitch);
+        
         if (!lastPlayerSwitch) {
           this.time = null;
         } else {
@@ -41,46 +46,54 @@ document.addEventListener("alpine:init", () => {
   console.log("Alpine.js is ready to go!");
 
   Alpine.store("localState", {
-    joined: false,
+    room: null,
     nextPlayer: null,
     name: "",
     id: "",
 
     init() {
       Alpine.effect(() => {
-        if (this.joined) {
-          Alpine.store("remoteState").connect();
+        const remoteState = Alpine.store("remoteState");
+        if (this.room) {
+          remoteState.connect();
+        }
+        else if (remoteState && remoteState.connected){
+          remoteState.disconnect();
         }
       });
 
       this.restore();
+
+      Alpine.effect(() => {
+        // write stuff to local storage
+        if (this.room) {
+          localStorage.setItem("room", this.room);
+        } else {
+          localStorage.removeItem("room");
+        }
+
+        localStorage.setItem("name", this.name);
+        localStorage.setItem("id", this.id);
+      });
     },
 
-    join(name) {
-      this.joined = true;
+    join(name, room) {
+      this.room = room;
       this.name = name;
-      this.id = uuidv4();
-      localStorage.clear();
-      localStorage.setItem("joined", this.joined);
-      localStorage.setItem("name", this.name);
-      localStorage.setItem("id", this.id);
     },
 
     leave() {
-      this.joined = false;
-      this.name = "";
-      localStorage.clear();
-      localStorage.setItem("id", this.id);
-      Alpine.store("remoteState").disconnect();
+      this.room = null;
     },
 
     restore() {
-      const joined = localStorage.getItem("joined");
-      if (joined) {
-        this.joined = true;
-        this.name = localStorage.getItem("name");
-        this.id = localStorage.getItem("id");
+      this.id = localStorage.getItem("id");
+      if(!this.id) {
+        this.id = uuidv4();
       }
+
+      this.name = localStorage.getItem("name");
+      this.room = localStorage.getItem("room");
     },
   });
 
@@ -90,7 +103,11 @@ document.addEventListener("alpine:init", () => {
     lastPlayerSwitch: null,
     connected: false,
     isMyTurn: false,
+
     _client: null,
+    _playersTopic: null,
+    _currentPlayerTopic: null,
+    _gameStateTopic: null,
 
     init() {
       Alpine.effect(() => {
@@ -100,7 +117,7 @@ document.addEventListener("alpine:init", () => {
             -1
         ) {
           this._client.publish(
-            "im.dorian.whos-turn-is-it.players",
+            this._playersTopic,
             JSON.stringify({
               [Alpine.store("localState").id]: Alpine.store("localState").name,
               ...this.players,
@@ -113,6 +130,7 @@ document.addEventListener("alpine:init", () => {
       Alpine.effect(() => {
         if (this.currentPlayer == Alpine.store("localState").id) {
           this.isMyTurn = true;
+          Alpine.store("audio").playDing();
         } else {
           this.isMyTurn = false;
         }
@@ -136,16 +154,18 @@ document.addEventListener("alpine:init", () => {
           Alpine.store("localState").nextPlayer = nextPlayer;
         }
       });
-
-      Alpine.effect(() => {
-        if (this.isMyTurn) {
-          Alpine.store("audio").playDing();
-        }
-      });
     },
 
     connect() {
+      const that = this;
       const url = "wss://broker.emqx.io:8084/mqtt";
+      const topicPrefix = `im.dorian.whos-turn-is-it.${btoa(Alpine.store(
+        "localState"
+      ).room)}`;
+
+      this._gameStateTopic = `${topicPrefix}.gameState`;
+      this._playersTopic = `${topicPrefix}.players`;
+      this._currentPlayerTopic = `${topicPrefix}.currentPlayer`;
 
       const options = {
         // Clean session
@@ -156,24 +176,24 @@ document.addEventListener("alpine:init", () => {
       };
 
       this._client = mqtt.connect(url, options);
-      const client = this._client;
-      this._client.on("connect", function () {
+
+      this._client.on("connect", () => {
         // Subscribe to a topic
-        client.subscribe("im.dorian.whos-turn-is-it.players");
-        client.subscribe("im.dorian.whos-turn-is-it.currentPlayer");
+        that._client.subscribe(that._playersTopic);
+        that._client.subscribe(that._currentPlayerTopic);
       });
 
-      this._client.on("message", function (topic, message) {
+      this._client.on("message", (topic, message) => {
         // message is Buffer
         console.log(topic, message.toString());
 
-        if (topic === "im.dorian.whos-turn-is-it.players") {
+        if (topic === that._playersTopic) {
           const data = JSON.parse(message.toString());
           if (!Alpine.store("remoteState").connected) {
             Alpine.store("remoteState").connected = true;
           }
           Alpine.store("remoteState").players = data;
-        } else if (topic === "im.dorian.whos-turn-is-it.currentPlayer") {
+        } else if (topic === that._currentPlayerTopic) {
           const data = JSON.parse(message.toString());
           Alpine.store("remoteState").currentPlayer = data.id;
           Alpine.store("remoteState").lastPlayerSwitch = data.since;
@@ -183,7 +203,7 @@ document.addEventListener("alpine:init", () => {
 
     giveTurnToNextPlayer() {
       this._client.publish(
-        "im.dorian.whos-turn-is-it.currentPlayer",
+        this._currentPlayerTopic,
         JSON.stringify({
           id: Alpine.store("localState").nextPlayer,
           since: new Date().getTime(),
@@ -194,18 +214,30 @@ document.addEventListener("alpine:init", () => {
 
     disconnect() {
       this._client.end(true);
+      this._client = null;
+      this.players = [];
+      this.currentPlayer = null;
+      this.lastPlayerSwitch = null;
+      this.connected = false;
+      this.isMyTurn = false;
+
+      this._gameStateTopic = null;
+      this._playersTopic = null;
+      this._currentPlayerTopic = null;
+
+      Alpine.store("localState").nextPlayer = null;
     },
 
     clear() {
       this._client.publish(
-        "im.dorian.whos-turn-is-it.players",
+        this._playersTopic,
         JSON.stringify({
           [Alpine.store("localState").id]: Alpine.store("localState").name,
         }),
         { qos: 1, retain: true }
       );
       this._client.publish(
-        "im.dorian.whos-turn-is-it.currentPlayer",
+        this._currentPlayerTopic,
         JSON.stringify({
           id: Alpine.store("localState").id,
           since: new Date().getTime(),

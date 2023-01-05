@@ -14,7 +14,7 @@
 <body>
     <main class="container">
         <div x-data>
-            <div x-show="$store.localState.joined">
+            <div x-show="$store.localState.room">
                 <hgroup>
                     <h1
                         x-text="'Currently playing: ' + ($store.remoteState.isMyTurn ? 'YOU!':$store.remoteState.players[$store.remoteState.currentPlayer])">
@@ -39,44 +39,55 @@
                     I'm done!
                 </button>
 
-                <label for="nextPlayer_select">Player after me:
-                    <b x-text="$store.remoteState.players[$store.localState.nextPlayer]"></b>
-                </label>
-                <select x-model="$store.localState.nextPlayer" id="nextPlayer_select">
-                    <template
-                        x-for="playerId in Object.keys($store.remoteState.players).filter(id => id != $store.localState.id)"
-                        :key="playerId">
-                        <option x-bind:value="playerId" x-text="$store.remoteState.players[playerId]"></option>
-                    </template>
-                </select>
+                <details class="first-details">
+                    <summary>Settings for me</summary>
 
-                <fieldset>
-                    <label for="sound_enabled">
-                        <input x-model="$store.audio.isEnabled" @click="$store.audio.testPermission()" type="checkbox"
-                            id="sound_enabled" name="sound_enabled" role="switch" />
-                        Enable sound
-                    </label>
-                </fieldset>
 
-                <div class="grid">
-                    <button class="secondary outline" @click="$store.localState.leave()">
-                        Leave
+                    <fieldset>
+                        <label for="nextPlayer_select">Player after me:
+                            <b x-text="$store.remoteState.players[$store.localState.nextPlayer]"></b>
+                        </label>
+                        <select x-model="$store.localState.nextPlayer" id="nextPlayer_select">
+                            <template
+                                x-for="playerId in Object.keys($store.remoteState.players).filter(id => id != $store.localState.id)"
+                                :key="playerId">
+                                <option x-bind:value="playerId" x-text="$store.remoteState.players[playerId]"></option>
+                            </template>
+                        </select>
+
+                        <label for="sound_enabled">
+                            <input x-model="$store.audio.isEnabled" @click="$store.audio.testPermission()"
+                                type="checkbox" id="sound_enabled" name="sound_enabled" role="switch" />
+                            Enable sound
+                        </label>
+                    </fieldset>
+
+                    <button class="invalid outline" @click="$store.localState.leave()" type="submit">
+                        Leave room
                     </button>
+                </details>
+
+                <details>
+                    <summary>This room</summary>
+
+                    <p>
+                        Other players:
+                    <ul>
+                        <template x-for="playerId in Object.keys($store.remoteState.players)" :key="playerId">
+                            <li x-text="$store.remoteState.players[playerId]"></li>
+                        </template>
+                    </ul>
+                    </p>
+
                     <button class="secondary outline" @click="$store.remoteState.clear()">
-                        Clear
+                        Clear player list
                     </button>
-                </div>
-
-                <p>Other players:</p>
-                <ul>
-                    <template x-for="playerId in Object.keys($store.remoteState.players)" :key="playerId">
-                        <li x-text="$store.remoteState.players[playerId]"></li>
-                    </template>
-                </ul>
+                </details>
             </div>
-            <div x-show="!$store.localState.joined">
+            <div x-show="!$store.localState.room">
                 <form x-data="JoinForm()" @submit.prevent="submitForm">
                     <input type="text" x-model="formData.name" placeholder="Name" />
+                    <input type="text" x-model="formData.room" placeholder="Room" />
                     <button type="submit">Join</button>
                 </form>
             </div>
