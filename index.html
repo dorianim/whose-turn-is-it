@@ -14,7 +14,7 @@
 <body>
     <main class="container">
         <div x-data>
-            <div x-show="$store.localState.room">
+            <div x-show="$store.remoteState.connected && $store.localState.room">
                 <hgroup>
                     <h1
                         x-text="'Currently playing: ' + ($store.remoteState.isMyTurn ? 'YOU!':$store.remoteState.players[$store.remoteState.currentPlayer])">
@@ -84,6 +84,11 @@
                     </button>
                 </details>
             </div>
+
+            <div x-show="!$store.remoteState.connected && $store.localState.room">
+                <h1 class="timer loading" aria-busy="true">Connecting...</h1>
+            </div>
+
             <div x-show="!$store.localState.room">
                 <form x-data="JoinForm()" @submit.prevent="submitForm">
                     <input type="text" x-model="formData.name" placeholder="Name" />
