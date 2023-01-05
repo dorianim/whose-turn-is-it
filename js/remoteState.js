@@ -84,7 +84,7 @@ document.addEventListener("alpine:init", () => {
         iterations: 5000,
       });
 
-      const topicPrefix = `im.dorian.whos-turn-is-it.${btoa(
+      const topicPrefix = `im.dorian.whose-turn-is-it.${btoa(
         Alpine.store("localState").room
       )}`;
       this._gameStateTopic = CryptoJS.SHA256(
@@ -114,7 +114,7 @@ document.addEventListener("alpine:init", () => {
             // reset game if not connected after 5 seconds
             that.clear();
           }
-        }, 1000 * 5);
+        }, 1000 * 4);
 
         that._client.subscribe(that._gameStateTopic);
         that._client.subscribe(that._currentPlayerTopic);

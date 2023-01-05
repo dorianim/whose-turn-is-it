@@ -97,9 +97,19 @@
             </div>
 
             <div x-show="!$store.localState.room">
+                <hgroup>
+                    <h1>
+                        Whose turn is it?
+                    </h1>
+                    <h2>Please create or join a room</h2>
+                </hgroup>
                 <form x-data="JoinForm()" @submit.prevent="submitForm">
-                    <input type="text" x-model="formData.name" placeholder="Name" />
-                    <input type="text" x-model="formData.room" placeholder="Room" />
+                    <label for="joinForm_name">Name:</label>
+                    <input id="joinForm_name" type="text" x-model="formData.name" placeholder="Name" />
+                    <small>How others will see you</small>
+                    <label for="joinForm_room">Room:</label>
+                    <input id="joinForm_room" type="text" x-model="formData.room" placeholder="Room" />
+                    <small>Make sure, this is exactly the same for all players</small>
                     <button type="submit">Join</button>
                 </form>
             </div>
