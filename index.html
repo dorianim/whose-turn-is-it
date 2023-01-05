@@ -68,7 +68,7 @@
                     <summary>This room</summary>
 
                     <label for="roomForm_interval">Interval (seconds):</label>
-                    <input id="roomForm_interval" type="number" x-model.throttle.500ms="$store.remoteState.interval"
+                    <input id="roomForm_interval" type="number" x-model.lazy="$store.remoteState.interval"
                         placeholder="Interval" />
 
                     <p>
