@@ -10,6 +10,7 @@ document.addEventListener("alpine:init", () => {
     _client: null,
     _currentPlayerTopic: null,
     _gameStateTopic: null,
+    _lastGameState: null,
 
     init() {
       Alpine.effect(() => {
@@ -50,6 +51,12 @@ document.addEventListener("alpine:init", () => {
                 players.length
             ];
           Alpine.store("localState").nextPlayer = nextPlayer;
+        }
+      });
+
+      Alpine.effect(() => {
+        if (this.connected) {
+          this.updateInterval(this.interval);
         }
       });
     },
@@ -95,6 +102,7 @@ document.addEventListener("alpine:init", () => {
           if (!that.connected) {
             that.connected = true;
           }
+          that._lastGameState = data;
           that.players = data.players;
           that.interval = data.interval;
         } else if (topic === that._currentPlayerTopic) {
@@ -131,6 +139,10 @@ document.addEventListener("alpine:init", () => {
       this._updateCurrentPlayer(Alpine.store("localState").id);
     },
 
+    updateInterval(interval) {
+      this._updateGameState(this.players, interval);
+    },
+
     _updatePlayers(players) {
       if(!this.interval) {
         this.interval = 30;
@@ -139,13 +151,16 @@ document.addEventListener("alpine:init", () => {
     },
 
     _updateGameState(players, interval) {
+      const newGameState = {
+        version: 1,
+        players: players,
+        interval: interval,
+      }
+
+      if(this._lastGameState && JSON.stringify(this._lastGameState) === JSON.stringify(newGameState)) return;
       this._client.publish(
         this._gameStateTopic,
-        JSON.stringify({
-          version: 1,
-          players: players,
-          interval: interval,
-        }),
+        JSON.stringify(newGameState),
         { qos: 1, retain: true }
       );
     },

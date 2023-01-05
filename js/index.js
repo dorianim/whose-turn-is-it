@@ -23,6 +23,20 @@ function JoinForm() {
 }
 }
 
+function RoomForm() {
+  return {
+    formData: {
+      interval: null,
+    },
+    init() {
+      this.formData.interval = Alpine.store("remoteState").interval;
+    },
+    submitForm() {
+      Alpine.store("remoteState").updateInterval(this.formData.interval);
+    }
+}
+}
+
 function Timer() {
   return {
     time: 0,
