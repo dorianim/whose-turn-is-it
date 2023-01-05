@@ -10,17 +10,17 @@ function uuidv4() {
 function JoinForm() {
   return {
     formData: {
-        name: "",
-        room: "",
+      name: "",
+      room: "",
     },
     init() {
-        this.formData.name = Alpine.store("localState").name;
-        this.formData.room = Alpine.store("localState").room;
+      this.formData.name = Alpine.store("localState").name;
+      this.formData.room = Alpine.store("localState").room;
     },
     submitForm() {
-        Alpine.store("localState").join(this.formData.name, this.formData.room);
-    }
-}
+      Alpine.store("localState").join(this.formData.name, this.formData.room);
+    },
+  };
 }
 
 function RoomForm() {
@@ -33,8 +33,8 @@ function RoomForm() {
     },
     submitForm() {
       Alpine.store("remoteState").updateInterval(this.formData.interval);
-    }
-}
+    },
+  };
 }
 
 function Timer() {
@@ -48,7 +48,9 @@ function Timer() {
           this.time = null;
         } else {
           this.time = Math.floor(
-            ((Alpine.store("remoteState").interval * 1000) - (new Date().getTime() - lastPlayerSwitch)) / 1000
+            (Alpine.store("remoteState").interval * 1000 -
+              (new Date().getTime() - lastPlayerSwitch)) /
+              1000
           );
         }
       }, 100);

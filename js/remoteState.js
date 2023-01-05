@@ -21,7 +21,7 @@ document.addEventListener("alpine:init", () => {
         ) {
           this._updatePlayers({
             [Alpine.store("localState").id]: Alpine.store("localState").name,
-            ...this.players
+            ...this.players,
           });
         }
       });
@@ -64,9 +64,9 @@ document.addEventListener("alpine:init", () => {
     connect() {
       const that = this;
       const url = "wss://broker.emqx.io:8084/mqtt";
-      const topicPrefix = `im.dorian.whos-turn-is-it.${btoa(Alpine.store(
-        "localState"
-      ).room)}`;
+      const topicPrefix = `im.dorian.whos-turn-is-it.${btoa(
+        Alpine.store("localState").room
+      )}`;
 
       this._gameStateTopic = `${topicPrefix}.gameState`;
       this._currentPlayerTopic = `${topicPrefix}.currentPlayer`;
@@ -83,7 +83,7 @@ document.addEventListener("alpine:init", () => {
 
       this._client.on("connect", () => {
         setTimeout(() => {
-          if(!that.connected) {
+          if (!that.connected) {
             // reset game if not connected after 5 seconds
             that.clear();
           }
@@ -144,7 +144,7 @@ document.addEventListener("alpine:init", () => {
     },
 
     _updatePlayers(players) {
-      if(!this.interval) {
+      if (!this.interval) {
         this.interval = 30;
       }
       this._updateGameState(players, this.interval);
@@ -155,14 +155,17 @@ document.addEventListener("alpine:init", () => {
         version: 1,
         players: players,
         interval: interval,
-      }
+      };
 
-      if(this._lastGameState && JSON.stringify(this._lastGameState) === JSON.stringify(newGameState)) return;
-      this._client.publish(
-        this._gameStateTopic,
-        JSON.stringify(newGameState),
-        { qos: 1, retain: true }
-      );
+      if (
+        this._lastGameState &&
+        JSON.stringify(this._lastGameState) === JSON.stringify(newGameState)
+      )
+        return;
+      this._client.publish(this._gameStateTopic, JSON.stringify(newGameState), {
+        qos: 1,
+        retain: true,
+      });
     },
 
     _updateCurrentPlayer(id) {
@@ -174,6 +177,6 @@ document.addEventListener("alpine:init", () => {
         }),
         { qos: 1, retain: true }
       );
-    }
+    },
   });
 });
