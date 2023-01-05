@@ -47,7 +47,7 @@ function Timer() {
         if (!lastPlayerSwitch) {
           this.time = null;
         } else {
-          this.time = parseInt(
+          this.time = Math.floor(
             ((Alpine.store("remoteState").interval * 1000) - (new Date().getTime() - lastPlayerSwitch)) / 1000
           );
         }
