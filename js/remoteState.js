@@ -11,6 +11,8 @@ document.addEventListener("alpine:init", () => {
     _currentPlayerTopic: null,
     _gameStateTopic: null,
     _lastGameState: null,
+    _key: null,
+    _iv: null,
 
     init() {
       Alpine.effect(() => {
@@ -64,12 +66,32 @@ document.addEventListener("alpine:init", () => {
     connect() {
       const that = this;
       const url = "wss://broker.emqx.io:8084/mqtt";
+      const keySize = 512;
+      const ivSize = 128;
+      // derive key from room name
+      this._key = CryptoJS.PBKDF2(Alpine.store("localState").room, url, {
+        keySize: keySize / 32,
+        iterations: 1000,
+      });
+      // random iv
+      this._iv = CryptoJS.PBKDF2(Alpine.store("localState").room, url, {
+        keySize: ivSize / 32,
+        iterations: 5000,
+      });
+
       const topicPrefix = `im.dorian.whos-turn-is-it.${btoa(
         Alpine.store("localState").room
       )}`;
+      this._gameStateTopic = CryptoJS.SHA256(
+        this._encrypt(`${topicPrefix}.gameState`)
+      ).toString();
+      this._currentPlayerTopic = CryptoJS.SHA256(
+        this._encrypt(`${topicPrefix}.currentPlayer`)
+      ).toString();
 
-      this._gameStateTopic = `${topicPrefix}.gameState`;
-      this._currentPlayerTopic = `${topicPrefix}.currentPlayer`;
+      console.log("Connecting to MQTT broker...");
+      console.log("Game state topic:", this._gameStateTopic);
+      console.log("Current player topic:", this._currentPlayerTopic);
 
       const options = {
         // Clean session
@@ -95,10 +117,15 @@ document.addEventListener("alpine:init", () => {
 
       this._client.on("message", (topic, message) => {
         // message is Buffer
-        console.log(topic, message.toString());
+        message = that._decrypt(message.toString());
+        const data = JSON.parse(JSON.parse(message));
 
         if (topic === that._gameStateTopic) {
-          const data = JSON.parse(message.toString());
+          if (data.version !== 1 || !data.players || !data.interval) {
+            console.log("Invalid game state, resetting...");
+            that.clear();
+            return;
+          }
           if (!that.connected) {
             that.connected = true;
           }
@@ -106,7 +133,14 @@ document.addEventListener("alpine:init", () => {
           that.players = data.players;
           that.interval = data.interval;
         } else if (topic === that._currentPlayerTopic) {
-          const data = JSON.parse(message.toString());
+          if (!data.id || !data.since) {
+            console.log("Invalid current player, resetting...");
+            that.clear();
+            return;
+          }
+          if (data.since < that.lastPlayerSwitch) {
+            return;
+          }
           that.currentPlayer = data.id;
           that.lastPlayerSwitch = data.since;
         }
@@ -162,21 +196,40 @@ document.addEventListener("alpine:init", () => {
         JSON.stringify(this._lastGameState) === JSON.stringify(newGameState)
       )
         return;
-      this._client.publish(this._gameStateTopic, JSON.stringify(newGameState), {
-        qos: 1,
-        retain: true,
-      });
+
+      console.log("Updating game state:", newGameState);
+      this._client.publish(
+        this._gameStateTopic,
+        this._encrypt(JSON.stringify(newGameState)),
+        {
+          qos: 1,
+          retain: true,
+        }
+      );
     },
 
     _updateCurrentPlayer(id) {
       this._client.publish(
         this._currentPlayerTopic,
-        JSON.stringify({
-          id: id,
-          since: new Date().getTime(),
-        }),
+        this._encrypt(
+          JSON.stringify({
+            id: id,
+            since: new Date().getTime(),
+          })
+        ),
         { qos: 1, retain: true }
       );
+    },
+
+    _encrypt(data) {
+      return CryptoJS.AES.encrypt(JSON.stringify(data), this._key, {
+        iv: this._iv,
+      }).toString();
+    },
+
+    _decrypt(data) {
+      const decrypted = CryptoJS.AES.decrypt(data, this._key, { iv: this._iv });
+      return decrypted.toString(CryptoJS.enc.Utf8);
     },
   });
 });

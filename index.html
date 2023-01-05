@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <script src="https://unpkg.com/crypto-js@4.1.1/crypto-js.js"></script>
     <script src="js/index.js"></script>
     <script src="js/localState.js"></script>
     <script src="js/remoteState.js"></script>
@@ -67,7 +68,7 @@
                     <summary>This room</summary>
 
                     <label for="roomForm_interval">Interval (seconds):</label>
-                    <input id="roomForm_interval" type="number" x-model.throttle.1000ms="$store.remoteState.interval"
+                    <input id="roomForm_interval" type="number" x-model.throttle.500ms="$store.remoteState.interval"
                         placeholder="Interval" />
 
                     <p>
