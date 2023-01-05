@@ -1,6 +1,7 @@
 document.addEventListener("alpine:init", () => {
   Alpine.store("remoteState", {
     players: [],
+    interval: null,
     currentPlayer: null,
     lastPlayerSwitch: null,
     connected: false,
@@ -17,14 +18,10 @@ document.addEventListener("alpine:init", () => {
           Object.keys(this.players).indexOf(Alpine.store("localState").id) ===
             -1
         ) {
-          this._client.publish(
-            this._playersTopic,
-            JSON.stringify({
-              [Alpine.store("localState").id]: Alpine.store("localState").name,
-              ...this.players,
-            }),
-            { qos: 1, retain: true }
-          );
+          this._updatePlayers({
+            [Alpine.store("localState").id]: Alpine.store("localState").name,
+            ...this.players
+          });
         }
       });
 
@@ -78,8 +75,14 @@ document.addEventListener("alpine:init", () => {
       this._client = mqtt.connect(url, options);
 
       this._client.on("connect", () => {
-        // Subscribe to a topic
-        that._client.subscribe(that._playersTopic);
+        setTimeout(() => {
+          if(!that.connected) {
+            // reset game if not connected after 5 seconds
+            that.clear();
+          }
+        }, 1000 * 5);
+
+        that._client.subscribe(that._gameStateTopic);
         that._client.subscribe(that._currentPlayerTopic);
       });
 
@@ -87,12 +90,13 @@ document.addEventListener("alpine:init", () => {
         // message is Buffer
         console.log(topic, message.toString());
 
-        if (topic === that._playersTopic) {
+        if (topic === that._gameStateTopic) {
           const data = JSON.parse(message.toString());
           if (!that.connected) {
             that.connected = true;
           }
-          that.players = data;
+          that.players = data.players;
+          that.interval = data.interval;
         } else if (topic === that._currentPlayerTopic) {
           const data = JSON.parse(message.toString());
           that.currentPlayer = data.id;
@@ -102,14 +106,7 @@ document.addEventListener("alpine:init", () => {
     },
 
     giveTurnToNextPlayer() {
-      this._client.publish(
-        this._currentPlayerTopic,
-        JSON.stringify({
-          id: Alpine.store("localState").nextPlayer,
-          since: new Date().getTime(),
-        }),
-        { qos: 1, retain: true }
-      );
+      this._updateCurrentPlayer(Alpine.store("localState").nextPlayer);
     },
 
     disconnect() {
@@ -122,28 +119,46 @@ document.addEventListener("alpine:init", () => {
       this.isMyTurn = false;
 
       this._gameStateTopic = null;
-      this._playersTopic = null;
       this._currentPlayerTopic = null;
 
       Alpine.store("localState").nextPlayer = null;
     },
 
     clear() {
+      this._updatePlayers({
+        [Alpine.store("localState").id]: Alpine.store("localState").name,
+      });
+      this._updateCurrentPlayer(Alpine.store("localState").id);
+    },
+
+    _updatePlayers(players) {
+      if(!this.interval) {
+        this.interval = 30;
+      }
+      this._updateGameState(players, this.interval);
+    },
+
+    _updateGameState(players, interval) {
       this._client.publish(
-        this._playersTopic,
+        this._gameStateTopic,
         JSON.stringify({
-          [Alpine.store("localState").id]: Alpine.store("localState").name,
-        }),
-        { qos: 1, retain: true }
-      );
-      this._client.publish(
-        this._currentPlayerTopic,
-        JSON.stringify({
-          id: Alpine.store("localState").id,
-          since: new Date().getTime(),
+          version: 1,
+          players: players,
+          interval: interval,
         }),
         { qos: 1, retain: true }
       );
     },
+
+    _updateCurrentPlayer(id) {
+      this._client.publish(
+        this._currentPlayerTopic,
+        JSON.stringify({
+          id: id,
+          since: new Date().getTime(),
+        }),
+        { qos: 1, retain: true }
+      );
+    }
   });
 });

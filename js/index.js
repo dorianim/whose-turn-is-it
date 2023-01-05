@@ -34,7 +34,7 @@ function Timer() {
           this.time = null;
         } else {
           this.time = parseInt(
-            (90000 - (new Date().getTime() - lastPlayerSwitch)) / 1000
+            ((Alpine.store("remoteState").interval * 1000) - (new Date().getTime() - lastPlayerSwitch)) / 1000
           );
         }
       }, 100);
