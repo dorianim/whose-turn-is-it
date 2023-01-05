@@ -31,10 +31,16 @@
                         x-text="time + 's'"></p>
                 </div>
 
-                <button @click="$store.remoteState.giveTurnToNextPlayer()"
+                <button x-show="!$store.remoteState.skipMe" @click="$store.remoteState.giveTurnToNextPlayer()"
                     x-bind:disabled="$store.remoteState.currentPlayer !== $store.localState.id">
                     I'm done!
                 </button>
+
+                <label for="skip_switch" class="mb">
+                    <input x-model="$store.remoteState.skipMe"
+                        type="checkbox" id="skip_switch" role="switch" />
+                    Skip me
+                </label>
 
                 <details class="first-details">
                     <summary>Options</summary>

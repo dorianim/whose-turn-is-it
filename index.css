@@ -28,6 +28,10 @@
   margin-top: 2.5em;
 }
 
+.mb {
+  margin-bottom: var(--spacing) !important;
+}
+
 .first-details {
   padding-top: var(--spacing);
     border-bottom: var(--border-width) solid var(--accordion-border-color);
