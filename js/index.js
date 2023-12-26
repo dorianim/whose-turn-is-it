@@ -50,8 +50,13 @@ function Timer() {
           this.time = Math.floor(
             (Alpine.store("remoteState").interval * 1000 -
               (new Date().getTime() - lastPlayerSwitch)) /
-              1000
+            1000
           );
+          if (this.time == 10) {
+            Alpine.store("audio").playTimeAlmostOver();
+          } else if (this.time == 0) {
+            Alpine.store("audio").playTimeOver();
+          }
         }
       }, 100);
     },
@@ -97,6 +102,16 @@ document.addEventListener("alpine:init", () => {
     playDing() {
       if (!this.isEnabled) return;
       this.playSound("sound/ding.mp3");
+    },
+
+    playTimeOver() {
+      if (!this.isEnabled || !this.audioPlayer.paused) return;
+      this.playSound("sound/time-over.mp3");
+    },
+
+    playTimeAlmostOver() {
+      if (!this.isEnabled || !this.audioPlayer.paused) return;
+      this.playSound("sound/time-almost-over.mp3");
     },
 
     playSound(soundFile) {

@@ -14,13 +14,16 @@ document.addEventListener("alpine:init", () => {
     _lastGameState: null,
     _key: null,
     _iv: null,
+    _noSleep: null,
 
     init() {
+      this._noSleep = new NoSleep();
+
       Alpine.effect(() => {
         if (
           this.connected &&
           Object.keys(this.players).indexOf(Alpine.store("localState").id) ===
-            -1
+          -1
         ) {
           this._updatePlayers({
             [Alpine.store("localState").id]: Alpine.store("localState").name,
@@ -45,7 +48,7 @@ document.addEventListener("alpine:init", () => {
         if (
           Alpine.store("localState").nextPlayer == null ||
           Alpine.store("localState").nextPlayer ==
-            Alpine.store("localState").id ||
+          Alpine.store("localState").id ||
           !Object.keys(this.players).includes(
             Alpine.store("localState").nextPlayer
           )
@@ -53,8 +56,8 @@ document.addEventListener("alpine:init", () => {
           const players = Object.keys(this.players).sort();
           const nextPlayer =
             players[
-              (players.indexOf(Alpine.store("localState").id) + 1) %
-                players.length
+            (players.indexOf(Alpine.store("localState").id) + 1) %
+            players.length
             ];
           Alpine.store("localState").nextPlayer = nextPlayer;
         }
@@ -133,6 +136,7 @@ document.addEventListener("alpine:init", () => {
           if (!that.connected) {
             that.connected = true;
           }
+          console.log("Received game state:", data);
           that._lastGameState = data;
           that.players = data.players;
           that.interval = data.interval;
@@ -152,6 +156,7 @@ document.addEventListener("alpine:init", () => {
     },
 
     giveTurnToNextPlayer() {
+      this._noSleep.enable();
       this._updateCurrentPlayer(Alpine.store("localState").nextPlayer);
     },
 
@@ -171,6 +176,9 @@ document.addEventListener("alpine:init", () => {
     },
 
     clear() {
+      if (!this.interval) {
+        this.interval = 30;
+      }
       this._updatePlayers({
         [Alpine.store("localState").id]: Alpine.store("localState").name,
       });
@@ -178,13 +186,12 @@ document.addEventListener("alpine:init", () => {
     },
 
     updateInterval(interval) {
+      this.interval = interval;
       this._updateGameState(this.players, interval);
     },
 
     _updatePlayers(players) {
-      if (!this.interval) {
-        this.interval = 30;
-      }
+      this.players = players;
       this._updateGameState(players, this.interval);
     },
 
@@ -201,6 +208,7 @@ document.addEventListener("alpine:init", () => {
       )
         return;
 
+      this._lastGameState = newGameState;
       console.log("Updating game state:", newGameState);
       this._client.publish(
         this._gameStateTopic,
