@@ -52,9 +52,10 @@ function Timer() {
               (new Date().getTime() - lastPlayerSwitch)) /
             1000
           );
-          if (this.time == 10) {
+
+          if (this.time == 10 && Alpine.store("remoteState").isMyTurn) {
             Alpine.store("audio").playTimeAlmostOver();
-          } else if (this.time == 0) {
+          } else if (this.time == 0 && Alpine.store("remoteState").isMyTurn) {
             Alpine.store("audio").playTimeOver();
           }
         }
